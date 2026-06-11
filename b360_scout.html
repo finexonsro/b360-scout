@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="B360 Scout">
+<title>B360 Scout</title>
+<style>
+  :root {
+    --orange: #FF6B00;
+    --orange-light: #FFF0E6;
+    --bg: #F7F6F4;
+    --surface: #FFFFFF;
+    --border: rgba(0,0,0,0.1);
+    --text: #1A1A1A;
+    --muted: #6B6B6B;
+    --green-bg: #EAF3DE; --green-text: #3B6D11; --green-border: #639922;
+    --blue-bg: #E6F1FB; --blue-text: #185FA5; --blue-border: #378ADD;
+    --gray-bg: #F1EFE8; --gray-text: #5F5E5A; --gray-border: #888780;
+    --purple-bg: #EEEDFE; --purple-text: #3C3489; --purple-border: #7F77DD;
+    --amber-bg: #FAEEDA; --amber-text: #854F0B; --amber-border: #BA7517;
+    --red-bg: #FCEBEB; --red-text: #A32D2D; --red-border: #E24B4A;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 15px; }
+
+  .top-bar { background: #1A1A1A; color: #fff; padding: 14px 16px 12px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+  .top-bar .logo { font-size: 17px; font-weight: 600; letter-spacing: 0.02em; }
+  .top-bar .logo span { color: var(--orange); }
+  .top-bar .match-badge { font-size: 12px; color: rgba(255,255,255,0.5); }
+
+  .section { background: var(--surface); margin: 10px; border-radius: 14px; padding: 16px; border: 0.5px solid var(--border); }
+  .section-title { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; }
+
+  .field { margin-bottom: 12px; }
+  .field:last-child { margin-bottom: 0; }
+  label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+  input[type="text"], textarea, select {
+    width: 100%; padding: 10px 12px; border: 0.5px solid var(--border); border-radius: 10px;
+    font-size: 15px; font-family: inherit; background: var(--bg); color: var(--text);
+    -webkit-appearance: none; appearance: none; outline: none;
+  }
+  input[type="text"]:focus, textarea:focus { border-color: var(--orange); background: #fff; }
+  textarea { resize: none; line-height: 1.5; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+
+  .pills { display: flex; flex-wrap: wrap; gap: 6px; }
+  .pill {
+    padding: 6px 12px; border-radius: 20px; border: 0.5px solid var(--border);
+    font-size: 13px; cursor: pointer; background: var(--surface); color: var(--text);
+    user-select: none; transition: all 0.1s; white-space: nowrap;
+  }
+  .pill:active { transform: scale(0.96); }
+  .pill.sel-role { background: var(--purple-bg); border-color: var(--purple-border); color: var(--purple-text); font-weight: 500; }
+  .pill.sel-a { background: var(--green-bg); border-color: var(--green-border); color: var(--green-text); font-weight: 500; }
+  .pill.sel-b { background: var(--blue-bg); border-color: var(--blue-border); color: var(--blue-text); font-weight: 500; }
+  .pill.sel-none { background: var(--gray-bg); border-color: var(--gray-border); color: var(--gray-text); font-weight: 500; }
+  .pill.sel-acq { background: var(--green-bg); border-color: var(--green-border); color: var(--green-text); font-weight: 500; }
+  .pill.sel-watch { background: var(--amber-bg); border-color: var(--amber-border); color: var(--amber-text); font-weight: 500; }
+  .pill.sel-skip { background: var(--gray-bg); border-color: var(--gray-border); color: var(--gray-text); font-weight: 500; }
+
+  .player-block { border: 0.5px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 10px; background: var(--bg); }
+  .player-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .player-label { font-size: 14px; font-weight: 600; color: var(--orange); }
+  .remove-btn { font-size: 13px; color: var(--muted); background: none; border: none; padding: 4px 8px; cursor: pointer; }
+
+  .add-player-btn {
+    width: 100%; padding: 13px; border: 1.5px dashed var(--border); border-radius: 12px;
+    background: none; font-size: 14px; color: var(--muted); cursor: pointer; margin-top: 4px;
+    font-family: inherit;
+  }
+  .add-player-btn:active { background: var(--bg); }
+
+  .generate-btn {
+    width: 100%; padding: 15px; background: var(--orange); color: #fff; border: none;
+    border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer;
+    font-family: inherit; letter-spacing: 0.01em;
+  }
+  .generate-btn:active { background: #e05e00; transform: scale(0.99); }
+
+  .output-box { display: none; background: var(--surface); margin: 10px; border-radius: 14px; padding: 16px; border: 0.5px solid var(--border); }
+  .output-box.visible { display: block; }
+  .output-text { font-size: 14px; line-height: 1.7; white-space: pre-wrap; color: var(--text); }
+  .copy-btn { margin-top: 12px; width: 100%; padding: 12px; background: var(--bg); border: 0.5px solid var(--border); border-radius: 10px; font-size: 14px; font-weight: 500; cursor: pointer; font-family: inherit; }
+  .copy-btn:active { background: #e8e8e8; }
+  .new-match-btn { margin-top: 8px; width: 100%; padding: 12px; background: none; border: 0.5px solid var(--border); border-radius: 10px; font-size: 14px; color: var(--muted); cursor: pointer; font-family: inherit; }
+
+  .spinner { display: none; text-align: center; padding: 24px; color: var(--muted); font-size: 14px; }
+  .spinner.visible { display: block; }
+  .dot-anim::after { content: ''; animation: dots 1.2s infinite; }
+  @keyframes dots { 0%{content:''} 33%{content:'.'} 66%{content:'..'} 100%{content:'...'} }
+
+  .bottom-pad { height: 32px; }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div class="logo">B<span>360</span> Scout</div>
+  <div class="match-badge" id="top-match">U14 Turnier</div>
+</div>
+
+<div id="form-view">
+
+<div class="section">
+  <div class="section-title">Match</div>
+  <div class="two-col field">
+    <div><label>Team A</label><input type="text" id="teamA" placeholder="z.B. Bayern"></div>
+    <div><label>Team B</label><input type="text" id="teamB" placeholder="z.B. Westfalen"></div>
+  </div>
+  <div class="two-col field">
+    <div><label>Time</label><input type="text" id="matchTime" placeholder="10:00"></div>
+    <div><label>Date</label><input type="text" id="matchDate" placeholder="12.06.2026"></div>
+  </div>
+  <div class="field">
+    <label>Game context (optional)</label>
+    <textarea id="gameCtx" rows="2" placeholder="Score, pitch, key dynamics..."></textarea>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Players observed</div>
+  <div id="playerList"></div>
+  <button class="add-player-btn" onclick="addPlayer()">+ Add player</button>
+</div>
+
+<div class="section">
+  <div class="section-title">Overall impression</div>
+  <div class="field">
+    <textarea id="impression" rows="2" placeholder="General level, team to follow up..."></textarea>
+  </div>
+</div>
+
+<div style="margin: 10px;">
+  <button class="generate-btn" onclick="generateNote()">Generate scouting note →</button>
+</div>
+
+</div>
+
+<div class="spinner" id="spinner"><span class="dot-anim">Generating note</span></div>
+
+<div class="output-box" id="outputBox">
+  <div class="section-title">B360 Scouting Note</div>
+  <div class="output-text" id="outputText"></div>
+  <button class="copy-btn" onclick="copyNote()">Copy note</button>
+  <button class="new-match-btn" onclick="newMatch()">New match</button>
+</div>
+
+<div class="bottom-pad"></div>
+
+<script>
+const ROLES = [
+  'TW — Klassisch','TW — Raumspieler',
+  'IV — Spielaufbauend','IV — Leader','IV — Stopper',
+  'AV — Offensiv','AV — Defensiv','AV — Invertierend',
+  'MF — 6 Anker','MF — 8 Läufer','MF — 8 Gestalter','MF — 10 Spielmacher',
+  'FL — Tororientiert','FL — Kreativ','FL — Klassisch',
+  'ST — Torjäger','ST — Target','ST — Raumstürmer'
+];
+
+let players = [];
+let pid = 0;
+let currentNote = '';
+
+function addPlayer() {
+  const id = ++pid;
+  players.push({ id, role: '', potential: '', decision: '' });
+  renderPlayers();
+  setTimeout(() => {
+    const el = document.getElementById('pblock-' + id);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 100);
+}
+
+function removePlayer(id) {
+  players = players.filter(p => p.id !== id);
+  renderPlayers();
+}
+
+function renderPlayers() {
+  const list = document.getElementById('playerList');
+  if (!players.length) { list.innerHTML = ''; return; }
+  list.innerHTML = players.map((p, i) => `
+    <div class="player-block" id="pblock-${p.id}">
+      <div class="player-header">
+        <span class="player-label">Player ${i+1}</span>
+        <button class="remove-btn" onclick="removePlayer(${p.id})">✕ remove</button>
+      </div>
+      <div class="two-col field">
+        <div><label>Shirt #</label><input type="text" id="p${p.id}-num" placeholder="7"></div>
+        <div><label>Name (if known)</label><input type="text" id="p${p.id}-name" placeholder="optional"></div>
+      </div>
+      <div class="field">
+        <label>Position played</label>
+        <input type="text" id="p${p.id}-pos" placeholder="LW, ST, CB...">
+      </div>
+      <div class="field">
+        <label>Role profile</label>
+        <div class="pills" id="roles-${p.id}">
+          ${ROLES.map(r => `<span class="pill${p.role===r?' sel-role':''}" onclick="selRole(${p.id},'${r}',this)">${r}</span>`).join('')}
+        </div>
+      </div>
+      <div class="field">
+        <label>Strengths</label>
+        <textarea id="p${p.id}-str" rows="2" placeholder="Key strengths..."></textarea>
+      </div>
+      <div class="field">
+        <label>Weaknesses / open questions</label>
+        <textarea id="p${p.id}-wk" rows="2" placeholder="Limitations, doubts..."></textarea>
+      </div>
+      <div class="field">
+        <label>Potential</label>
+        <div class="pills">
+          <span class="pill${p.potential==='A'?' sel-a':''}" onclick="selPot(${p.id},'A',this)">A — Top</span>
+          <span class="pill${p.potential==='B'?' sel-b':''}" onclick="selPot(${p.id},'B',this)">B — Interesting</span>
+          <span class="pill${p.potential==='no signal'?' sel-none':''}" onclick="selPot(${p.id},'no signal',this)">No signal</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Decision</label>
+        <div class="pills">
+          <span class="pill${p.decision==='Acquire'?' sel-acq':''}" onclick="selDec(${p.id},'Acquire',this)">Acquire</span>
+          <span class="pill${p.decision==='Watchlist'?' sel-watch':''}" onclick="selDec(${p.id},'Watchlist',this)">Watchlist</span>
+          <span class="pill${p.decision==='Skip'?' sel-skip':''}" onclick="selDec(${p.id},'Skip',this)">Skip</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Note</label>
+        <textarea id="p${p.id}-note" rows="2" placeholder="Context, follow-up..."></textarea>
+      </div>
+    </div>
+  `).join('');
+}
+
+function selRole(id, role, el) {
+  const p = players.find(x => x.id === id);
+  if (p) p.role = role;
+  document.querySelectorAll(`#roles-${id} .pill`).forEach(x => x.classList.remove('sel-role'));
+  el.classList.add('sel-role');
+}
+
+function selPot(id, val, el) {
+  const p = players.find(x => x.id === id);
+  if (p) p.potential = val;
+  const block = document.getElementById('pblock-' + id);
+  block.querySelectorAll('.pill').forEach(x => x.classList.remove('sel-a','sel-b','sel-none'));
+  const cls = val==='A'?'sel-a':val==='B'?'sel-b':'sel-none';
+  el.classList.add(cls);
+  // restore role and decision selections
+  if (p.role) { const rEl = [...document.querySelectorAll(`#roles-${id} .pill`)].find(x=>x.textContent===p.role); if(rEl) rEl.classList.add('sel-role'); }
+  if (p.decision) { const dEls = block.querySelectorAll('.pills'); dEls.forEach(g => { [...g.children].forEach(x => { if(x.textContent.trim()===p.decision){ const dc=p.decision==='Acquire'?'sel-acq':p.decision==='Watchlist'?'sel-watch':'sel-skip'; x.classList.add(dc); } }); }); }
+}
+
+function selDec(id, val, el) {
+  const p = players.find(x => x.id === id);
+  if (p) p.decision = val;
+  const block = document.getElementById('pblock-' + id);
+  // remove only decision classes from sibling pills in same pill group
+  el.parentElement.querySelectorAll('.pill').forEach(x => x.classList.remove('sel-acq','sel-watch','sel-skip'));
+  const cls = val==='Acquire'?'sel-acq':val==='Watchlist'?'sel-watch':'sel-skip';
+  el.classList.add(cls);
+}
+
+function gatherData() {
+  const teamA = document.getElementById('teamA').value.trim() || 'Team A';
+  const teamB = document.getElementById('teamB').value.trim() || 'Team B';
+  const time = document.getElementById('matchTime').value.trim();
+  const date = document.getElementById('matchDate').value.trim();
+  const ctx = document.getElementById('gameCtx').value.trim();
+  const imp = document.getElementById('impression').value.trim();
+  document.getElementById('top-match').textContent = teamA + ' vs ' + teamB;
+
+  const playerData = players.map((p, i) => {
+    const num = document.getElementById('p'+p.id+'-num')?.value.trim() || '?';
+    const name = document.getElementById('p'+p.id+'-name')?.value.trim() || '';
+    const pos = document.getElementById('p'+p.id+'-pos')?.value.trim() || '';
+    const str = document.getElementById('p'+p.id+'-str')?.value.trim() || '';
+    const wk = document.getElementById('p'+p.id+'-wk')?.value.trim() || '';
+    const note = document.getElementById('p'+p.id+'-note')?.value.trim() || '';
+    return { num, name, pos, role: p.role, potential: p.potential, decision: p.decision, strengths: str, weaknesses: wk, note };
+  });
+
+  return { teamA, teamB, time, date, ctx, imp, players: playerData };
+}
+
+async function generateNote() {
+  const data = gatherData();
+  if (!data.players.length) { alert('Add at least one player first.'); return; }
+
+  document.getElementById('form-view').style.display = 'none';
+  document.getElementById('spinner').className = 'spinner visible';
+  document.getElementById('outputBox').className = 'output-box';
+  window.scrollTo(0,0);
+
+  const playerLines = data.players.map((p, i) => {
+    return `Spieler ${i+1}: #${p.num}${p.name?' — '+p.name:''} | Position: ${p.pos||'—'} | Rollenprofil: ${p.role||'—'} | Potenzial: ${p.potential||'—'} | Entscheidung: ${p.decision||'—'}
+Stärken: ${p.strengths||'—'}
+Schwächen/Fragen: ${p.weaknesses||'—'}${p.note?'\nNotiz: '+p.note:''}`;
+  }).join('\n\n');
+
+  const prompt = `Du bist der B360 Scouting-Assistent. Erstelle eine prägnante, evaluative B360-Scouting-Notiz auf Deutsch basierend auf folgenden Live-Beobachtungen. Potenzial-first, keine Floskeln, klare Sprache. Struktur: 1) Spielinfo 2) Spieler (je: Rollenprofil, Stärken, Schwächen, Potenzial-Einschätzung, Entscheidung) 3) Gesamteindruck.
+
+SPIEL: ${data.teamA} vs ${data.teamB} | ${data.date} ${data.time}
+Kontext: ${data.ctx||'—'}
+
+${playerLines}
+
+Gesamteindruck: ${data.imp||'—'}`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const json = await res.json();
+    const text = json.content?.map(b => b.text||'').join('') || 'Fehler beim Generieren.';
+    currentNote = text;
+    document.getElementById('outputText').textContent = text;
+  } catch(e) {
+    document.getElementById('outputText').textContent = 'Fehler: ' + e.message;
+  }
+
+  document.getElementById('spinner').className = 'spinner';
+  document.getElementById('outputBox').className = 'output-box visible';
+}
+
+function copyNote() {
+  if (!currentNote) return;
+  navigator.clipboard.writeText(currentNote).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    btn.textContent = '✓ Copied!';
+    setTimeout(() => btn.textContent = 'Copy note', 1500);
+  });
+}
+
+function newMatch() {
+  players = [];
+  pid = 0;
+  currentNote = '';
+  document.getElementById('teamA').value = '';
+  document.getElementById('teamB').value = '';
+  document.getElementById('matchTime').value = '';
+  document.getElementById('matchDate').value = '';
+  document.getElementById('gameCtx').value = '';
+  document.getElementById('impression').value = '';
+  document.getElementById('playerList').innerHTML = '';
+  document.getElementById('outputBox').className = 'output-box';
+  document.getElementById('form-view').style.display = 'block';
+  document.getElementById('top-match').textContent = 'U14 Turnier';
+  window.scrollTo(0,0);
+}
+</script>
+</body>
+</html>
